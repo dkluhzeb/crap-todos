@@ -1,0 +1,67 @@
+services:
+  cms:
+    image: ghcr.io/dkluhzeb/crap-cms:0.1.0-alpha.6
+    volumes:
+      - ./collections:/config/collections:ro
+      - ./globals:/config/globals:ro
+      - ./hooks:/config/hooks:ro
+      - ./access:/config/access:ro
+      - ./migrations:/config/migrations:ro
+      - ./plugins:/config/plugins:ro
+      - ./init.lua:/config/init.lua:ro
+      - ./crap.toml:/config/crap.toml:ro
+      - cms-data:/config/data
+    ports:
+      - "3000:3000"
+      - "50051:50051"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        crap-cms -C /config migrate up 2>&1 || true
+        exec crap-cms -C /config serve
+
+  frontend:
+    image: rust:1.94-bookworm
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend-cargo-registry:/usr/local/cargo/registry
+      - frontend-cargo-git:/usr/local/cargo/git
+      - frontend-cargo-bin:/usr/local/cargo/bin
+      - frontend-target-cache:/app/target
+    ports:
+      - "8080:8080"
+      - "3001:3001"
+    environment:
+      - GRPC_URL=http://cms:50051
+    depends_on:
+      - cms
+    command: >
+      bash -c '
+        echo "[setup] Installing protoc..."
+        apt-get update -qq && apt-get install -y -qq protobuf-compiler > /dev/null
+        echo "[setup] protoc ready"
+
+        rustup target add wasm32-unknown-unknown 2>/dev/null
+        echo "[setup] wasm32 target ready"
+
+        if command -v cargo-leptos > /dev/null 2>&1; then
+          echo "[setup] cargo-leptos already installed"
+        else
+          echo "[setup] Installing cargo-leptos + wasm-bindgen via binstall (~10s)..."
+          curl -L --proto =https --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall -y cargo-leptos wasm-bindgen-cli leptosfmt
+          echo "[setup] cargo-leptos installed"
+        fi
+
+        echo ""
+        echo "[start] Dev server on :8080"
+        cargo leptos watch
+      '
+
+volumes:
+  cms-data:
+  frontend-cargo-registry:
+  frontend-cargo-git:
+  frontend-cargo-bin:
+  frontend-target-cache:

@@ -1,0 +1,8 @@
+# CMS runtime data
+data/
+uploads/
+types/
+
+# Frontend build artifacts
+frontend/target/
+frontend/pkg/
