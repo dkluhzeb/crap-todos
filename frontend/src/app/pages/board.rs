@@ -4,7 +4,7 @@ use leptos_router::hooks::use_navigate;
 use crate::api::{
     CreateTask, DeleteTask, Logout, UpdateTask, fetch_tasks, get_current_user, update_task_status,
 };
-use crate::app::components::{DetailPanel, Header, TaskCard, shared::COLUMNS};
+use crate::app::components::{DetailPanel, ErrorState, Header, TaskCard, shared::COLUMNS};
 use crate::prelude::*;
 
 #[component]
@@ -131,7 +131,7 @@ fn TaskBoard(
                             }
                                 .into_any()
                         }
-                        Err(e) => view! { <BoardError err=e /> }.into_any(),
+                        Err(e) => view! { <ErrorState err=e fallback_label="Failed to load" /> }.into_any(),
                     })
             }}
         </Suspense>
@@ -159,36 +159,6 @@ fn BoardSkeleton() -> impl IntoView {
                 })
                 .collect_view()}
         </div>
-    }
-}
-
-#[component]
-fn BoardError(err: ServerFnError) -> impl IntoView {
-    let msg = format!("{err}");
-    let is_auth = msg.contains("access denied") || msg.contains("permission");
-
-    if is_auth {
-        view! {
-            <div class="flex flex-col items-center justify-center py-20 gap-4">
-                <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
-                    <LogIn class="w-8 h-8 text-gray-500" />
-                </div>
-                <p class="text-gray-400">"You need to log in first"</p>
-                <a
-                    href="/login"
-                    class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                    "Log in"
-                </a>
-            </div>
-        }.into_any()
-    } else {
-        view! {
-            <div class="flex flex-col items-center justify-center py-20 gap-4">
-                <p class="text-red-400 text-sm">{format!("Failed to load: {err}")}</p>
-            </div>
-        }
-        .into_any()
     }
 }
 

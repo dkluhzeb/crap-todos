@@ -2,7 +2,7 @@
 
 use leptos_router::hooks::use_navigate;
 use crate::api::{HardDeleteTask, Logout, RestoreTask, fetch_trashed_tasks, get_current_user};
-use crate::app::components::{Header, shared::{COLUMNS, priority_color, priority_flame_count}};
+use crate::app::components::{ErrorState, Header, shared::{COLUMNS, priority_color, priority_flame_count}};
 use crate::prelude::*;
 
 #[component]
@@ -104,14 +104,7 @@ fn TrashList(
                             }
                                 .into_any()
                         }
-                        Err(e) => {
-                            view! {
-                                <div class="text-red-400 text-sm">
-                                    {format!("Failed to load trash: {e}")}
-                                </div>
-                            }
-                                .into_any()
-                        }
+                        Err(e) => view! { <ErrorState err=e fallback_label="Failed to load trash" /> }.into_any()
                     })
             }}
         </Suspense>
