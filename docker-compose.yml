@@ -1,6 +1,6 @@
 services:
   cms:
-    image: ghcr.io/dkluhzeb/crap-cms:0.1.0-alpha.6
+    image: ghcr.io/dkluhzeb/crap-cms:0.1.0-alpha.7
     volumes:
       - ./collections:/config/collections:ro
       - ./globals:/config/globals:ro

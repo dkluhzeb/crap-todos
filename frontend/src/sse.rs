@@ -76,7 +76,10 @@ pub async fn events_handler(Query(params): Query<SseParams>) -> Response {
 
         loop {
             match grpc_stream.message().await {
-                Ok(Some(event)) => yield sse_mutation(&event),
+                Ok(Some(event)) => {
+                    info!("SSE: forwarding {} {} {}", event.operation, event.collection, event.document_id);
+                    yield sse_mutation(&event);
+                }
                 Ok(None) => { info!("SSE: gRPC stream ended"); break; }
                 Err(e) => { error!("SSE: gRPC stream error: {e}"); break; }
             }
